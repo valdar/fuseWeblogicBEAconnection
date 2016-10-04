@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/blueprint"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+           xsi:schemaLocation="
+      http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd
+      http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+    <!-- Weblogic JMS Connection factory object from JDNI Server by jndiName-->
+    <bean id="factory" class="com.github.valdar.jndi.JndiFactoryFactory"/>
+    <bean id="webLogicJmsConnectionFactory" factory-ref="factory" factory-method="createJndiObjectFactory"
+          init-method="afterPropertiesSet">
+        <property name="jndiTemplate" ref="jndiWebLogicTemplate"/>
+        <property name="jndiName" value="WWPConnectionFactory"/>
+        <property name="proxyInterface" value="javax.jms.ConnectionFactory"/>
+    </bean>
+
+    <!-- WebLogic Jndi reference-->
+    <bean id="jndiWebLogicTemplate" class="org.springframework.jndi.JndiTemplate">
+        <property name="environment">
+            <props>
+                <prop key="java.naming.factory.initial">weblogic.jndi.WLInitialContextFactory</prop>
+                <prop key="java.naming.provider.url">t3://bea1:8011,bea2:8021/</prop>
+                <prop key="java.naming.security.authentication">none</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="jmsInConnectionFactory" factory-ref="webLogicJmsConnectionFactory" factory-method="getObject"/>
+
+    <bean id="jndiWebLogicDestinationResolver" class="org.springframework.jms.support.destination.JndiDestinationResolver">
+        <property name="jndiTemplate" ref="jndiWebLogicTemplate"/>
+    </bean>
+
+    <!-- WebLogic Jms Camel Component -->
+    <bean id="bea" class="org.apache.camel.component.jms.JmsComponent">
+        <property name="connectionFactory" ref="jmsInConnectionFactory"/>
+        <property name="destinationResolver" ref="jndiWebLogicDestinationResolver"/>
+    </bean>
+
+    <bean id="loggingErrorHandler" class="org.apache.camel.builder.LoggingErrorHandlerBuilder">
+        <property name="logName" value="org.apache.camel"/>
+        <property name="level" value="ERROR"/>
+    </bean>
+
+    <camel:camelContext id="camelContext" streamCache="true" errorHandlerRef="loggingErrorHandler">
+
+        <camel:endpoint id="beaTest" uri="osb:queue:beaTest"/>
+
+        <camel:route id="to" inheritErrorHandler="true">
+            <camel:from uri="timer://test?fixedRate=true&amp;period=50000"/>
+            <camel:setBody>
+                <camel:simple>Hi!</camel:simple>
+            </camel:setBody>
+            <camel:to uri="ref:beaTest"/>
+        </camel:route>
+
+        <camel:route id="from" inheritErrorHandler="true">
+            <camel:from uri="ref:beaTest"/>
+            <camel:to uri="log:test?level=INFO"/>
+        </camel:route>
+
+
+    </camel:camelContext>
+
+</blueprint>

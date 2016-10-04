@@ -1,0 +1,5 @@
+Bundle-Name: weblogicDriver 
+Bundle-SymbolicName: weblogicDriver
+Bundle-ManifestVersion: 2
+Import-Package:javax.ejb;resolution:=optional,javax.ejb.spi;resolution:=optional,javax.jms,javax.transaction,javax.transaction.xa,javax.xml.stream,*;resolution:=optional
+Export-Package:!javax.ejb,!javax.ejb.spi,!javax.jms,!javax.transaction,!javax.transaction.xa,!javax.xml.stream,*
