@@ -25,6 +25,14 @@ osgi:install wrap:file://<projecthome>/wlthint3client.jar,file://wlthint3client.
 ```
 this is done with the setting in `wlthint3client.bnd`.
 
+### Doing the same in a fabric profile
+From Fuse 6.3 Roll up patch 1, you can achieve the same directly in a profile; to add the wrapped wlthint3client.jar in a profile just add in **io.fabric8.agent.properties** something on the lien of:
+```
+...
+bundle.wlthint3client = fabric:wrap:mvn:com.oracle/wlthint3client/12.1.3$Import-Package=javax.ejb;resolution:=optional,javax.ejb.spi;resolution:=optional,javax.jms;resolution:=optional,javax.transaction;resolution:=optional,javax.transaction.xa;resolution:=optional,javax.xml.stream;resolution:=optional,*;resolution:=optional&Export-Package=!javax.ejb,!javax.ejb.spi,!javax.jms,!javax.transaction,!javax.transaction.xa,!javax.xml.stream,*
+...
+```
+
 ## Build instructions
 
   1. To build this project be sure to have maven 3.x installed and from the <projecthome> directory run: `mvn clean package`
